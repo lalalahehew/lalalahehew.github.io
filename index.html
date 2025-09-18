@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사다리타기 게임</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            font-family: 'Arial', sans-serif;
+            color: white;
+            overflow-x: auto;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .coin {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #ffd700, #ffed4a, #fbbf24);
+            border-radius: 50%;
+            border: 3px solid #fbbf24;
+            box-shadow: 
+                inset 0 0 10px rgba(255, 255, 255, 0.3),
+                0 4px 15px rgba(255, 215, 0, 0.4);
+            animation: coinFloat 4s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        .coin::before {
+            content: '₩';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            font-weight: bold;
+            color: #b45309;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .coin::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4), transparent 50%);
+            border-radius: 50%;
+        }
+
+        @keyframes coinFloat {
+            0% { 
+                transform: translateY(0px) rotateY(0deg) rotateX(0deg);
+                box-shadow: 
+                    inset 0 0 10px rgba(255, 255, 255, 0.3),
+                    0 4px 15px rgba(255, 215, 0, 0.4);
+            }
+            25% { 
+                transform: translateY(-30px) rotateY(90deg) rotateX(15deg);
+                box-shadow: 
+                    inset 0 0 10px rgba(255, 255, 255, 0.5),
+                    0 8px 25px rgba(255, 215, 0, 0.6);
+            }
+            50% { 
+                transform: translateY(0px) rotateY(180deg) rotateX(0deg);
+                box-shadow: 
+                    inset 0 0 10px rgba(255, 255, 255, 0.3),
+                    0 4px 15px rgba(255, 215, 0, 0.4);
+            }
+            75% { 
+                transform: translateY(-20px) rotateY(270deg) rotateX(-15deg);
+                box-shadow: 
+                    inset 0 0 10px rgba(255, 255, 255, 0.4),
+                    0 6px 20px rgba(255, 215, 0, 0.5);
+            }
+            100% { 
+                transform: translateY(0px) rotateY(360deg) rotateX(0deg);
+                box-shadow: 
+                    inset 0 0 10px rgba(255, 255, 255, 0.3),
+                    0 4px 15px rgba(255, 215, 0, 0.4);
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .input-group input {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            text-align: center;
+            width: 80px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .ladder-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            overflow-x: auto;
+        }
+
+        .ladder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: fit-content;
+        }
+
+        .start-labels, .end-labels {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .label {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            text-align: center;
+            min-width: 80px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .label:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+        }
+
+        .label.selected {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .ladder-lines {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .vertical-line {
+            width: 4px;
+            background: linear-gradient(to bottom, #4ecdc4, #44a08d);
+            position: absolute;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+        }
+
+        .horizontal-line {
+            height: 4px;
+            background: linear-gradient(to right, #ff6b6b, #ff8e53);
+            position: absolute;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .horizontal-line:hover {
+            height: 6px;
+            box-shadow: 0 0 15px rgba(255, 107, 107, 0.8);
+        }
+
+        .path {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ffeb3b;
+            border-radius: 50%;
+            z-index: 100;
+            box-shadow: 0 0 15px #ffeb3b;
+            animation: glow 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 15px #ffeb3b; }
+            to { box-shadow: 0 0 25px #ffeb3b, 0 0 35px #ffeb3b; }
+        }
+
+        .result {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .result h2 {
+            color: #ffeb3b;
+            font-size: 1.8em;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .label {
+                min-width: 60px;
+                padding: 8px 12px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 사다리타기 게임 💰</h1>
+        </div>
+
+        <div class="controls">
+            <div class="input-group">
+                <label>참가자 수</label>
+                <input type="number" id="playerCount" min="2" max="10" value="4">
+            </div>
+            <div class="input-group">
+                <label>가로선 수</label>
+                <input type="number" id="lineCount" min="5" max="15" value="8">
+            </div>
+            <button class="btn" onclick="generateLadder()">사다리 생성</button>
+        </div>
+
+        <div class="ladder-container">
+            <div id="ladder" class="ladder"></div>
+        </div>
+
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        let ladderData = [];
+        let isAnimating = false;
+
+        // 동전 배경 애니메이션 생성
+        function createCoinBackground() {
+            for (let i = 0; i < 12; i++) {
+                const coin = document.createElement('div');
+                coin.className = 'coin';
+                coin.style.left = Math.random() * 100 + '%';
+                coin.style.top = Math.random() * 100 + '%';
+                coin.style.animationDelay = Math.random() * 4 + 's';
+                coin.style.animationDuration = (Math.random() * 2 + 3) + 's';
+                document.body.appendChild(coin);
+            }
+        }
+
+        function generateLadder() {
+            const playerCount = parseInt(document.getElementById('playerCount').value);
+            const lineCount = parseInt(document.getElementById('lineCount').value);
+            
+            if (playerCount < 2 || playerCount > 10) {
+                alert('참가자 수는 2-10명 사이여야 합니다.');
+                return;
+            }
+            
+            if (lineCount < 5 || lineCount > 15) {
+                alert('가로선 수는 5-15개 사이여야 합니다.');
+                return;
+            }
+
+            document.getElementById('result').style.display = 'none';
+            
+            const ladder = document.getElementById('ladder');
+            ladder.innerHTML = '';
+
+            // 시작 레이블
+            const startLabels = document.createElement('div');
+            startLabels.className = 'start-labels';
+            
+            const startNames = ['🎯 시작1', '🎯 시작2', '🎯 시작3', '🎯 시작4', '🎯 시작5', '🎯 시작6', '🎯 시작7', '🎯 시작8', '🎯 시작9', '🎯 시작10'];
+            const endNames = ['🏆 상금1등', '🥈 상금2등', '🥉 상금3등', '🎁 선물', '🍀 행운', '⭐ 특별상', '🎪 이벤트', '🎊 축하', '🌟 럭키', '💝 보너스'];
+            
+            for (let i = 0; i < playerCount; i++) {
+                const label = document.createElement('div');
+                label.className = 'label';
+                label.textContent = startNames[i];
+                label.onclick = () => tracePath(i);
+                startLabels.appendChild(label);
+            }
+            ladder.appendChild(startLabels);
+
+            // 사다리 라인 생성
+            const linesContainer = document.createElement('div');
+            linesContainer.className = 'ladder-lines';
+            
+            const ladderWidth = (playerCount - 1) * 120 + 200;
+            const ladderHeight = lineCount * 60;
+            linesContainer.style.width = ladderWidth + 'px';
+            linesContainer.style.height = ladderHeight + 'px';
+
+            ladderData = Array(lineCount).fill().map(() => Array(playerCount - 1).fill(false));
+
+            // 세로선 생성
+            for (let i = 0; i < playerCount; i++) {
+                const vLine = document.createElement('div');
+                vLine.className = 'vertical-line';
+                vLine.style.left = (100 + i * 120) + 'px';
+                vLine.style.height = ladderHeight + 'px';
+                linesContainer.appendChild(vLine);
+            }
+
+            // 가로선 랜덤 생성
+            for (let row = 0; row < lineCount; row++) {
+                let hasLineInRow = false;
+                for (let col = 0; col < playerCount - 1; col++) {
+                    if (Math.random() > 0.6 && !hasLineInRow) {
+                        ladderData[row][col] = true;
+                        hasLineInRow = true;
+                        
+                        const hLine = document.createElement('div');
+                        hLine.className = 'horizontal-line';
+                        hLine.style.left = (100 + col * 120) + 'px';
+                        hLine.style.top = (row * 60 + 30) + 'px';
+                        hLine.style.width = '120px';
+                        linesContainer.appendChild(hLine);
+                        
+                        col++; // 연속된 가로선 방지
+                    }
+                }
+            }
+
+            ladder.appendChild(linesContainer);
+
+            // 끝 레이블
+            const endLabels = document.createElement('div');
+            endLabels.className = 'end-labels';
+            
+            for (let i = 0; i < playerCount; i++) {
+                const label = document.createElement('div');
+                label.className = 'label';
+                label.textContent = endNames[i];
+                endLabels.appendChild(label);
+            }
+            ladder.appendChild(endLabels);
+        }
+
+        function tracePath(startCol) {
+            if (isAnimating) return;
+            
+            isAnimating = true;
+            
+            // 기존 경로 제거
+            document.querySelectorAll('.path').forEach(p => p.remove());
+            document.querySelectorAll('.label.selected').forEach(l => l.classList.remove('selected'));
+            
+            // 시작점 표시
+            const startLabels = document.querySelectorAll('.start-labels .label');
+            startLabels[startCol].classList.add('selected');
+            
+            const linesContainer = document.querySelector('.ladder-lines');
+            let currentCol = startCol;
+            let currentRow = 0;
+            
+            const path = document.createElement('div');
+            path.className = 'path';
+            path.style.left = (97 + currentCol * 120) + 'px';
+            path.style.top = '-10px';
+            linesContainer.appendChild(path);
+
+            function animateStep() {
+                if (currentRow >= ladderData.length) {
+                    // 결과 표시
+                    const endLabels = document.querySelectorAll('.end-labels .label');
+                    endLabels[currentCol].classList.add('selected');
+                    
+                    const result = document.getElementById('result');
+                    result.innerHTML = `<h2>🎉 결과: ${endLabels[currentCol].textContent} 🎉</h2>`;
+                    result.style.display = 'block';
+                    
+                    isAnimating = false;
+                    return;
+                }
+
+                // 현재 위치에서 가로선 확인
+                if (currentCol > 0 && ladderData[currentRow][currentCol - 1]) {
+                    // 왼쪽으로 이동
+                    currentCol--;
+                } else if (currentCol < ladderData[0].length && ladderData[currentRow][currentCol]) {
+                    // 오른쪽으로 이동
+                    currentCol++;
+                }
+
+                currentRow++;
+                
+                // 경로 애니메이션
+                path.style.left = (97 + currentCol * 120) + 'px';
+                path.style.top = (currentRow * 60 - 10) + 'px';
+                
+                setTimeout(animateStep, 500);
+            }
+
+            setTimeout(animateStep, 500);
+        }
+
+        // 초기 설정
+        createCoinBackground();
+        generateLadder();
+
+        // 동전 애니메이션 주기적 갱신
+        setInterval(() => {
+            const coins = document.querySelectorAll('.coin');
+            coins.forEach(coin => {
+                if (Math.random() > 0.93) {
+                    coin.style.left = Math.random() * 100 + '%';
+                    coin.style.top = Math.random() * 100 + '%';
+                    coin.style.animationDelay = Math.random() * 4 + 's';
+                }
+            });
+        }, 6000);
+    </script>
+</body>
+</html>
